@@ -7,6 +7,9 @@ const cartModal = document.querySelector('.cart');
 const cartBackBtn = document.querySelector('.back');
 const cartConfirmBtn = document.querySelector('.cart-confirm');
 const productsDOM = document.querySelector('.products-center');
+const cartTotalPrice = document.querySelector('.cart__total-price');
+const cartItems = document.querySelector('.cart-items');
+
 let cart = [];
 
 class Products {
@@ -62,7 +65,18 @@ class UI {
         // add product to cart
         cart = [...cart, addedProduct];
         // save cart to local storage
+        Storage.saveCart(cart);
+        // update cart value
+
+        // display cart
       });
+    });
+  }
+
+  setCartValue(cart) {
+    cart.reduce((acc, curr) => {
+      const productPrice = new Intl.NumberFormat('fa-IR').format(curr.price);
+      return acc + curr.quantity * productPrice;
     });
   }
 }
@@ -75,6 +89,10 @@ class Storage {
   static getProduct(id) {
     const products = JSON.parse(localStorage.getItem('products'));
     return products.find(product => product.id === parseInt(id));
+  }
+
+  static saveCart(cart) {
+    localStorage.setItem('cart', JSON.stringify(cart));
   }
 }
 
