@@ -66,18 +66,25 @@ class UI {
         cart = [...cart, addedProduct];
         // save cart to local storage
         Storage.saveCart(cart);
-        // update cart value
-
-        // display cart
+        // Update cart value
+        this.setCartValue(cart);
+        // Display cart
       });
     });
   }
 
   setCartValue(cart) {
-    cart.reduce((acc, curr) => {
-      const productPrice = new Intl.NumberFormat('fa-IR').format(curr.price);
-      return acc + curr.quantity * productPrice;
-    });
+    let tempCartItems = 0;
+    const totalPrice = cart.reduce((acc, curr) => {
+      tempCartItems += curr.quantity;
+      return acc + curr.quantity * curr.price;
+    }, 0);
+
+    const faTotalPrice = new Intl.NumberFormat('fa-IR').format(totalPrice);
+
+    cartTotalPrice.innerText = `قیمت نهایی: ${faTotalPrice} تومان`;
+    cartItems.innerText = tempCartItems;
+    console.log(tempCartItems);
   }
 }
 
