@@ -9,6 +9,7 @@ const cartConfirmBtn = document.querySelector('.cart-confirm');
 const productsDOM = document.querySelector('.products-center');
 const cartTotalPrice = document.querySelector('.cart__total-price');
 const cartItems = document.querySelector('.cart-items');
+const cartContent = document.querySelector('.cart__content');
 
 let cart = [];
 
@@ -69,6 +70,7 @@ class UI {
         // Update cart value
         this.setCartValue(cart);
         // Display cart
+        this.addCartItem(addedProduct);
       });
     });
   }
@@ -85,6 +87,37 @@ class UI {
     cartTotalPrice.innerText = `قیمت نهایی: ${faTotalPrice} تومان`;
     cartItems.innerText = tempCartItems;
     console.log(tempCartItems);
+  }
+
+  addCartItem(cartItem) {
+    const faCartItemPrice = new Intl.NumberFormat('fa-IR').format(
+      cartItem.price
+    );
+
+    const cartItemDiv = document.createElement('div');
+    cartItemDiv.classList.add('cart__item');
+    cartItemDiv.innerHTML = `
+      <div class="img-container">
+        <img
+          class="cart__item-img"
+          src="${cartItem.imageUrl}"
+          alt="${cartItem.alt}"
+        />
+      </div>
+      <div class="cart__item-desc">
+        <h4 class="cart__item-title">${cartItem.title}</h4>
+        <h5 class="cart__item-price">${faCartItemPrice} تومان</h5>
+      </div>
+      <div class="cart__Item-delete">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div class="cart__item-controller">
+        <i class="fas fa-chevron-up"></i>
+        <span>${cartItem.quantity}</span>
+        <i class="fas fa-chevron-down"></i>
+      </div>
+    `;
+    cartContent.appendChild(cartItemDiv);
   }
 }
 
