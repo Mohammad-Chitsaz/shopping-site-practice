@@ -1,18 +1,3 @@
-import { productsData } from './products.js';
-
-const header = document.querySelector('header');
-const main = document.querySelector('main');
-const cartButton = document.querySelector('.nav__cart-icon');
-const cartModal = document.querySelector('.cart');
-const cartBackBtn = document.querySelector('.back');
-const cartConfirmBtn = document.querySelector('.cart-confirm');
-const productsDOM = document.querySelector('.products-center');
-const cartTotalPrice = document.querySelector('.cart__total-price');
-const cartItemsNumber = document.querySelector('.cart-items');
-const cartContent = document.querySelector('.cart__content');
-
-let cart = [];
-
 class Products {
   getProducts() {
     return productsData;
@@ -27,29 +12,31 @@ class UI {
         product.price
       );
       result += `
-        <div class="product">
-          <div class="img-container">
-            <img
-              class="product__img"
-              src="${product.imageUrl}"
-              alt=""
-            />
-          </div>
-          <div class="product__desc">
-            <p class="product__title">${product.title}</p>
-            <p class="product__price">${faProductPrice} تومان</p>
-          </div>
-          <button class="add-to-cart" data-id=${product.id}>اضافه به سبد خرید</button>
+      <div class="product">
+        <div class="img-container">
+          <img
+            class="product__img"
+            src="${product.imageUrl}"
+            alt="${product.alt}"
+          />
         </div>
+        <div class="product__desc">
+          <p class="product__title">${product.title}</p>
+          <p class="product__price">${faProductPrice} تومان</p>
+        </div>
+        <button class="add-to-cart" data-id=${product.id}>اضافه به سبد خرید</button>
+      </div>
       `;
-      productsDOM.innerHTML = result;
     });
+    productsDOM.innerHTML = result;
   }
 
   getAddToCartButtons() {
     const buttons = [...document.querySelectorAll('.add-to-cart')];
+
     buttons.forEach(button => {
       const id = button.dataset.id;
+
       const isInCart = cart.find(product => product.id === id);
 
       if (isInCart) {
@@ -61,12 +48,16 @@ class UI {
         e.target.innerText = 'اضافه شد';
         e.target.disabled = true;
 
-        const addedProduct = { ...Storage.getProdut(id), quantity: 1 };
+        // get product from products (storage)
+        const addedProduct = { ...Storage.getProduct(id), quantity: 1 };
+        // add product to cart
         cart = [...cart, addedProduct];
+        // save cart
         Storage.saveCart(cart);
 
+        // update cart value (cart items, cart price)
         this.setCartValue(cart);
-
+        // display product in DOM
         this.addCartItem(addedProduct);
       });
     });
@@ -81,7 +72,7 @@ class UI {
 
     const faTotalPrice = new Intl.NumberFormat('fa-IR').format(totalPrice);
 
-    cartItemsNumber.innerText = tempCartItems;
+    cartItems.innerText = tempCartItems;
     cartTotalPrice.innerText = `قیمت نهایی: ${faTotalPrice} تومان`;
   }
 
@@ -92,12 +83,13 @@ class UI {
     const faCartItemPrice = new Intl.NumberFormat('fa-IR').format(
       cartItem.price
     );
+
     cartItemDiv.innerHTML = `
       <div class="img-container">
         <img
           class="cart__item-img"
           src="${cartItem.imageUrl}"
-          alt=""
+          alt="${cartItem.alt}"
         />
       </div>
       <div class="cart__item-desc">
@@ -113,12 +105,16 @@ class UI {
         <i class="fas fa-chevron-down" data-id=${cartItem.id}></i>
       </div>
     `;
+
     cartContent.appendChild(cartItemDiv);
   }
 
-  setupApp(cart) {
-    cart = Storage.getCart();
+  setupApp() {
+    // get cart from localStorage
+    cart = Storage.getCart() || [];
+    // always show cart items in cart div (modal)
     cart.forEach(cartItem => this.addCartItem(cartItem));
+    // set cart item and cart price
     this.setCartValue(cart);
   }
 }
@@ -128,7 +124,7 @@ class Storage {
     localStorage.setItem('products', JSON.stringify(products));
   }
 
-  static getProdut(id) {
+  static getProduct(id) {
     const products = JSON.parse(localStorage.getItem('products'));
     return products.find(product => product.id === parseInt(id));
   }
@@ -142,7 +138,7 @@ class Storage {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', e => {
   const products = new Products();
   const productsData = products.getProducts();
 
@@ -153,24 +149,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Storage.saveProducts(productsData);
 });
-cartButton.addEventListener('click', showModal);
-cartBackBtn.addEventListener('click', closeModal);
-cartConfirmBtn.addEventListener('click', closeModal);
-
-function showModal() {
-  cartModal.style.opacity = 1;
-  cartModal.style.transform = 'scaleX(1)';
-  header.style.opacity = 0;
-  main.style.opacity = 0;
-  header.style.transition = '0.3s ease-in-out';
-  main.style.transition = '0.3s ease-in-out';
-}
-
-function closeModal() {
-  cartModal.style.opacity = 0;
-  cartModal.style.transform = 'scaleX(0)';
-  header.style.opacity = 1;
-  main.style.opacity = 1;
-  header.style.transition = '0.4s ease-in-out';
-  main.style.transition = '0.4s ease-in-out';
-}
