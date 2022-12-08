@@ -10,8 +10,10 @@ const productsDOM = document.querySelector('.products-center');
 const cartTotalPrice = document.querySelector('.cart__total-price');
 const cartItemsNumber = document.querySelector('.cart-items');
 const cartContent = document.querySelector('.cart__content');
+const clearCart = document.querySelector('.clear-cart');
 
 let cart = [];
+let buttonsDOM = [];
 
 class Products {
   getProducts() {
@@ -28,45 +30,40 @@ class UI {
       );
       result += `
         <div class="product">
-          <div class="img-container">
-            <img
-              class="product__img"
-              src="${product.imageUrl}"
-              alt=""
-            />
-          </div>
-          <div class="product__desc">
-            <p class="product__title">${product.title}</p>
-            <p class="product__price">${faProductPrice} تومان</p>
-          </div>
-          <button class="add-to-cart" data-id=${product.id}>اضافه به سبد خرید</button>
+            <div class="img-container">
+              <img
+                class="product__img"
+                src="${product.imageUrl}"
+                alt="${product.alt}"
+              />
+            </div>
+            <div class="product__desc">
+              <p class="product__title">${product.title}</p>
+              <p class="product__price">${faProductPrice} تومان</p>
+            </div>
+            <button class="add-to-cart" data-id=${product.id}>اضافه به سبد خرید</button>
         </div>
       `;
       productsDOM.innerHTML = result;
     });
   }
 
-  getAddToCartButtons() {
+  getAddCartButtons() {
     const buttons = [...document.querySelectorAll('.add-to-cart')];
+    buttonsDOM = buttons;
+
     buttons.forEach(button => {
       const id = button.dataset.id;
-      const isInCart = cart.find(product => product.id === id);
-
-      if (isInCart) {
-        button.innerText = 'اضافه شد';
-        button.disabled = true;
-      }
 
       button.addEventListener('click', e => {
         e.target.innerText = 'اضافه شد';
         e.target.disabled = true;
 
-        const addedProduct = { ...Storage.getProdut(id), quantity: 1 };
+        const addedProduct = { ...Storage.getProduct(id), quantity: 1 };
         cart = [...cart, addedProduct];
+
         Storage.saveCart(cart);
-
         this.setCartValue(cart);
-
         this.addCartItem(addedProduct);
       });
     });
@@ -79,10 +76,10 @@ class UI {
       return acc + curr.quantity * curr.price;
     }, 0);
 
-    const faTotalPrice = new Intl.NumberFormat('fa-IR').format(totalPrice);
+    const faCartTotalPrice = new Intl.NumberFormat('fa-IR').format(totalPrice);
 
     cartItemsNumber.innerText = tempCartItems;
-    cartTotalPrice.innerText = `قیمت نهایی: ${faTotalPrice} تومان`;
+    cartTotalPrice.innerText = `قیمت نهایی: ${faCartTotalPrice} تومان`;
   }
 
   addCartItem(cartItem) {
@@ -92,12 +89,13 @@ class UI {
     const faCartItemPrice = new Intl.NumberFormat('fa-IR').format(
       cartItem.price
     );
+
     cartItemDiv.innerHTML = `
       <div class="img-container">
         <img
           class="cart__item-img"
           src="${cartItem.imageUrl}"
-          alt=""
+          alt="${cartItem.alt}"
         />
       </div>
       <div class="cart__item-desc">
@@ -116,10 +114,46 @@ class UI {
     cartContent.appendChild(cartItemDiv);
   }
 
-  setupApp(cart) {
-    cart = Storage.getCart();
+  setupApp() {
+    cart = Storage.getCart() || [];
     cart.forEach(cartItem => this.addCartItem(cartItem));
     this.setCartValue(cart);
+
+    buttonsDOM.forEach(button => {
+      const id = button.dataset.id;
+      const isInCart = cart.find(cartItem => cartItem.id === parseInt(id));
+      if (isInCart) {
+        button.innerText = 'اضافه شد';
+        button.disabled = true;
+      }
+    });
+  }
+
+  cartLogic() {
+    clearCart.addEventListener('click', () => this.clearCart());
+  }
+
+  clearCart() {
+    cart.forEach(cartItem => this.removeItem(cartItem.id));
+
+    while (cartContent.children.length) {
+      cartContent.removeChild(cartContent.children[0]);
+    }
+    closeModal();
+  }
+
+  removeItem(id) {
+    cart = cart.filter(cartItem => cartItem.id !== id);
+    this.setCartValue(cart);
+    Storage.saveCart(cart);
+
+    this.getSingleButton(id);
+  }
+
+  getSingleButton(id) {
+    const button = buttonsDOM.find(btn => btn.dataset.id == id);
+    button.innerText = 'اضافه به سبد خرید';
+    button.disabled = false;
   }
 }
 
@@ -128,7 +162,7 @@ class Storage {
     localStorage.setItem('products', JSON.stringify(products));
   }
 
-  static getProdut(id) {
+  static getProduct(id) {
     const products = JSON.parse(localStorage.getItem('products'));
     return products.find(product => product.id === parseInt(id));
   }
@@ -148,7 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const ui = new UI();
   ui.displayProducts(productsData);
-  ui.getAddToCartButtons();
+  ui.getAddCartButtons();
+  ui.cartLogic();
   ui.setupApp();
 
   Storage.saveProducts(productsData);
